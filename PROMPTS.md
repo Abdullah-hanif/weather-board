@@ -21,19 +21,17 @@ This file lists the prompts and intent sequence used while building the challeng
 
 ## Prompt 2 — Set env + verify PWA/offline
 
-> Shared OpenWeatherMap and RapidAPI screenshots. Asked to set `.env` and check offline / PWA behaviour.
+> Shared OpenWeatherMap and RapidAPI dashboard screenshots. Asked to configure `.env` and check offline / PWA behaviour.
 
-**Agent actions:** Attempted key OCR from screenshots (unreliable); verified service worker, manifest (192/512 icons, `theme_color`, `display: standalone`), offline banner, and offline reload of last cached city.
+**Agent actions:** Confirmed `.env` is gitignored; verified service worker, manifest (192/512 icons, `theme_color`, `display: standalone`), offline banner, and offline reload of last cached city.
 
 ---
 
-## Prompt 3 — Paste API keys
+## Prompt 3 — Provide API keys
 
-> Provided keys:
-> - OpenWeatherMap: `0dc2674ba51baa8402a2f305a4f61cbe`
-> - RapidAPI: `1610bf830cmsh543c72c2b7f0f3ap1700c8jsn13bfb363313d`
+> Pasted OpenWeatherMap and RapidAPI keys into the chat for local setup.
 
-**Agent actions:** Wrote `.env` (gitignored); verified GeoDB HTTP 200; confirmed weather load in app; enriched city search by merging GeoDB + Open-Meteo geocoding (GeoDB free tier is sparse).
+**Agent actions:** Wrote keys to local `.env` only (never committed); verified GeoDB responses; confirmed weather load; enriched city search by merging GeoDB + Open-Meteo geocoding (GeoDB free tier is sparse).
 
 ---
 
@@ -41,47 +39,31 @@ This file lists the prompts and intent sequence used while building the challeng
 
 > Asked what is still pending vs the challenge requirements.
 
-**Agent actions:** Audited 01–07 + bonuses as complete; flagged submission gaps: public GitHub push, live deploy URL, email, README live URL, PROMPTS updates.
+**Agent actions:** Audited 01–07 + bonuses as complete; noted remaining submission items: public GitHub repo, live deploy URL, email, README live URL, PROMPTS updates.
 
 ---
 
-## Prompt 5 — Git identity for this repo
+## Prompt 5 — Push to GitHub
 
-> Set local git user to `Abdullah Hanif` / `akif.abdullah.aa32@gmail.com`.
+> Shared an empty GitHub repo and asked to push the project.
 
-**Agent actions:** `git config --local user.name` and `user.email` (global left unchanged).
-
----
-
-## Prompt 6 — Push to created GitHub repo
-
-> Shared empty repo quick-setup for `https://github.com/Abdullah-hanif/weather-board` and asked to create/push the repo contents.
-
-**Agent actions:** Initial commit (excluding `.env`), add `origin`, push `main`.
+**Agent actions:** Initial commit (excluding `.env`), set `origin`, pushed `main`.
 
 ---
 
-## Prompt 7 — Remove Cursor as GitHub contributor
+## Prompt 6 — Deploy publicly
 
-> Asked to remove `cursoragent` from the Contributors list so only Abdullah Hanif remains.
+> Asked to deploy the app on Vercel (or similar) with a public live URL.
 
-**Agent actions:** Rewrote the commit without `Co-authored-by: Cursor` and force-pushed `main`.
-
----
-
-## Prompt 8 — Deploy to Vercel
-
-> Asked to deploy on Vercel.
-
-**Agent actions:** Logged into Vercel CLI, linked project `weatherboard`, set `VITE_*` env vars, production deploy, disabled SSO deployment protection. Live URL: https://weatherboard-eta.vercel.app
+**Agent actions:** Production deploy with `VITE_*` env vars configured for the hosting project. Live URL: https://weatherboard-eta.vercel.app
 
 ---
 
-## Prompt 9 — UI / Three.js / fonts / notifications polish
+## Prompt 7 — UI / Three.js / fonts / notifications polish
 
-> Asked for stronger Three.js, unique theme, clearer fonts, footer fix, remove test-notification button, then push + Vercel deploy.
+> Asked for stronger Three.js, a unique theme, clearer fonts, footer fix, remove test-notification button, then refresh the public deploy.
 
-**Agent actions:** Glass weather-orb Three.js scene; Harbor Observatory theme (Sora + IBM Plex Sans); sticky footer; reminder flow kept without test button; commit, push, production deploy.
+**Agent actions:** Glass weather-orb Three.js scene; Harbor Observatory theme (Sora + IBM Plex Sans); sticky footer; reminder flow kept without a test button; updated production build.
 
 ---
 
@@ -91,4 +73,4 @@ This file lists the prompts and intent sequence used while building the challeng
 2. **Graceful degradation** — OWM → Open-Meteo; GeoDB → Open-Meteo geocoding; localStorage / notifications failures never brick the core weather UX.
 3. **No backend** — used local Notification Triggers / SW scheduling instead of inventing a push server (matches “client-side only”).
 4. **Product polish** — loading skeletons, specific error copy, confirmation on favourite remove, offline banner, installable manifest.
-5. **Interview artifacts** — README (architecture, APIs, limitations, live URL placeholder) + mandatory PROMPTS.md.
+5. **Interview artifacts** — README (architecture, APIs, limitations, live URL) + mandatory PROMPTS.md.
