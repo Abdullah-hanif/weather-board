@@ -61,6 +61,22 @@ This file lists the prompts and intent sequence used while building the challeng
 
 ---
 
+## Prompt 7 — Remove Cursor as GitHub contributor
+
+> Asked to remove `cursoragent` from the Contributors list so only Abdullah Hanif remains.
+
+**Agent actions:** Rewrote the commit without `Co-authored-by: Cursor` and force-pushed `main`.
+
+---
+
+## Prompt 8 — Deploy to Vercel
+
+> Asked to deploy on Vercel.
+
+**Agent actions:** Logged into Vercel CLI, linked project `weatherboard`, set `VITE_*` env vars, production deploy, disabled SSO deployment protection. Live URL: https://weatherboard-eta.vercel.app
+
+---
+
 ## Prompt strategy (what we optimized for)
 
 1. **Spec-first** — mapped each numbered requirement (01–07) to a concrete module before styling.

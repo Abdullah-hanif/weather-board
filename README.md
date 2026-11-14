@@ -2,7 +2,7 @@
 
 Personal weather dashboard — searchable cities, live conditions + 5-day forecast, favourites, offline PWA, and a morning reminder notification.
 
-**Live URL:** _add after deploy (Vercel/Netlify)_  
+**Live URL:** https://weatherboard-eta.vercel.app  
 **GitHub:** https://github.com/Abdullah-hanif/weather-board  
 **Stack:** Vite · React · TypeScript · vite-plugin-pwa (Workbox injectManifest)
 
