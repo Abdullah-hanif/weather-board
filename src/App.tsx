@@ -5,6 +5,7 @@ import { Favourites } from './components/Favourites'
 import { Forecast } from './components/Forecast'
 import { NotificationSettings } from './components/NotificationSettings'
 import { OfflineBanner } from './components/OfflineBanner'
+import { WeatherScene3D } from './components/WeatherScene3D'
 import { useFavourites } from './hooks/useFavourites'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { useTheme } from './hooks/useTheme'
@@ -40,25 +41,27 @@ export default function App() {
   const themeLabel =
     mode === 'system' ? `Theme: system (${resolved})` : `Theme: ${mode}`
 
+  const condition = data?.current.icon ?? 'partly'
+
   return (
-    <div className={`app atmosphere atmosphere--${data?.current.icon ?? 'cloud'}`}>
-      <div className="app__glow" aria-hidden="true" />
+    <div className={`app atmosphere atmosphere--${condition}`}>
+      <div className="app__veil" aria-hidden="true" />
 
       <header className="topbar">
         <div className="brand">
           <span className="brand__mark" aria-hidden="true" />
           <div>
             <p className="brand__name">WeatherBoard</p>
-            <p className="brand__tag">Personal forecast dashboard</p>
+            <p className="brand__tag">Harbor observatory · live forecast</p>
           </div>
         </div>
         <div className="topbar__actions">
-          <button type="button" className="btn btn--ghost" onClick={toggleUnit}>
+          <button type="button" className="btn btn--ghost btn--chip" onClick={toggleUnit}>
             °{unit === 'celsius' ? 'C' : 'F'}
           </button>
           <button
             type="button"
-            className="btn btn--ghost"
+            className="btn btn--ghost btn--chip"
             onClick={cycleTheme}
             aria-label={themeLabel}
             title={themeLabel}
@@ -121,12 +124,17 @@ export default function App() {
 
           {!isLoading && !data && !error && (
             <div className="panel empty empty--hero">
-              <p className="brand__name">WeatherBoard</p>
-              <h1>Check any city in seconds</h1>
-              <p>
-                Search to load live conditions and a 5-day forecast. Favourites and the last
-                viewed city stay on this device.
-              </p>
+              <div className="empty__scene-wrap">
+                <WeatherScene3D condition="partly" className="empty__scene" />
+              </div>
+              <div className="empty__copy">
+                <p className="brand__name">WeatherBoard</p>
+                <h1>Check any city in seconds</h1>
+                <p>
+                  Search to load live conditions and a 5-day forecast. Favourites and the last
+                  viewed city stay on this device.
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -145,8 +153,8 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span>Data: OpenWeatherMap · Open-Meteo · GeoDB Cities</span>
-        <span>Works offline for your last viewed city</span>
+        <span>Data · OpenWeatherMap · Open-Meteo · GeoDB Cities</span>
+        <span>Offline ready · last viewed city stays cached</span>
       </footer>
     </div>
   )

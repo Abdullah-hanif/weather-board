@@ -1,6 +1,6 @@
 import { formatTemp, formatWind } from '../lib/format'
 import type { TempUnit, WeatherPayload } from '../lib/types'
-import { WeatherIcon } from './WeatherIcon'
+import { WeatherScene3D } from './WeatherScene3D'
 
 interface Props {
   data: WeatherPayload
@@ -21,19 +21,18 @@ export function CurrentWeather({
 
   return (
     <section className="current" aria-labelledby="current-heading">
-      <div className="current__top">
-        <div>
+      <div className="current__stage">
+        <WeatherScene3D condition={current.icon} className="current__scene" />
+        <div className="current__overlay">
           <p className="eyebrow">Current conditions</p>
           <h2 id="current-heading">
             {city.name}
-            <span className="current__country">{city.country}</span>
+            {city.country ? <span className="current__country">, {city.country}</span> : null}
           </h2>
           <p className="current__desc">{current.description}</p>
+          <div className="current__temp">{formatTemp(current.temp, unit)}</div>
         </div>
-        <WeatherIcon condition={current.icon} size="lg" />
       </div>
-
-      <div className="current__temp">{formatTemp(current.temp, unit)}</div>
 
       <dl className="stats">
         <div>
@@ -61,7 +60,11 @@ export function CurrentWeather({
           {isFavourite ? 'Saved' : 'Save favourite'}
         </button>
         <span className="source-pill" title="Data provider">
-          {source === 'cache' ? 'Cached' : source === 'openweathermap' ? 'OpenWeather' : 'Open-Meteo'}
+          {source === 'cache'
+            ? 'Cached'
+            : source === 'openweathermap'
+              ? 'OpenWeather'
+              : 'Open-Meteo'}
         </span>
       </div>
       {favouriteDisabledReason && (

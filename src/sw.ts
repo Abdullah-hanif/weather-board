@@ -61,12 +61,44 @@ type ReminderPayload = {
   timestamp: number
 }
 
+type StoredReminder = {
+  enabled: boolean
+  hour: number
+  minute: number
+}
+
 const REMINDER_TAG = 'weatherboard-daily-reminder'
+const REMINDER_STORE = 'wb-reminder-store'
+const REMINDER_URL = '/__wb_reminder__'
+
+async function saveReminderPrefs(prefs: StoredReminder | null) {
+  const cache = await caches.open(REMINDER_STORE)
+  if (!prefs || !prefs.enabled) {
+    await cache.delete(REMINDER_URL)
+    return
+  }
+  await cache.put(
+    REMINDER_URL,
+    new Response(JSON.stringify(prefs), {
+      headers: { 'Content-Type': 'application/json' },
+    }),
+  )
+}
+
+async function loadReminderPrefs(): Promise<StoredReminder | null> {
+  const cache = await caches.open(REMINDER_STORE)
+  const res = await cache.match(REMINDER_URL)
+  if (!res) return null
+  try {
+    return (await res.json()) as StoredReminder
+  } catch {
+    return null
+  }
+}
 
 async function cancelReminder() {
   const notes = await self.registration.getNotifications({ tag: REMINDER_TAG })
   for (const n of notes) n.close()
-  // Also clear any scheduled trigger notifications
   try {
     const all = await self.registration.getNotifications({
       includeTriggered: true,
@@ -101,7 +133,7 @@ async function scheduleReminder(payload: ReminderPayload) {
     renotify: true,
   }
 
-  // Prefer Notification Triggers (fires with tab closed, no push server)
+  // Notification Triggers: fire even with the tab closed (no push server needed)
   type TriggerCtor = new (ts: number) => { timestamp: number }
   const Trigger = (self as unknown as { TimestampTrigger?: TriggerCtor }).TimestampTrigger
 
@@ -111,15 +143,15 @@ async function scheduleReminder(payload: ReminderPayload) {
     return
   }
 
-  // Fallback: show immediately if due within a grace window when SW wakes;
-  // otherwise store intent via a short-delay notification when possible.
   const delay = payload.timestamp - Date.now()
   if (delay <= 0) {
     await self.registration.showNotification(title, options)
+    const next = nextTimestamp(payload.hour, payload.minute)
+    await scheduleReminder({ ...payload, timestamp: next })
     return
   }
 
-  // Best-effort: schedule via setTimeout while SW is alive, then reschedule on events
+  // Best-effort while the SW stays alive; prefs restore on activate / periodicsync
   self.setTimeout(async () => {
     await self.registration.showNotification(title, {
       ...options,
@@ -130,15 +162,51 @@ async function scheduleReminder(payload: ReminderPayload) {
   }, Math.min(delay, 2147483647))
 }
 
+async function restorePersistedReminder() {
+  const prefs = await loadReminderPrefs()
+  if (!prefs?.enabled) return
+  const timestamp = nextTimestamp(prefs.hour, prefs.minute)
+  await scheduleReminder({ hour: prefs.hour, minute: prefs.minute, timestamp })
+}
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(restorePersistedReminder())
+})
+
+self.addEventListener('periodicsync', (event) => {
+  const syncEvent = event as ExtendableEvent & { tag: string }
+  if (syncEvent.tag !== 'weatherboard-reminder-sync') return
+  syncEvent.waitUntil(restorePersistedReminder())
+})
+
 self.addEventListener('message', (event) => {
-  const data = event.data as { type?: string; payload?: ReminderPayload } | undefined
+  const data = event.data as
+    | {
+        type?: string
+        payload?: ReminderPayload & StoredReminder
+      }
+    | undefined
   if (!data?.type) return
 
   if (data.type === 'SCHEDULE_REMINDER' && data.payload) {
     event.waitUntil(scheduleReminder(data.payload))
   }
+  if (data.type === 'PERSIST_REMINDER' && data.payload) {
+    event.waitUntil(
+      saveReminderPrefs({
+        enabled: Boolean(data.payload.enabled),
+        hour: data.payload.hour,
+        minute: data.payload.minute,
+      }),
+    )
+  }
   if (data.type === 'CANCEL_REMINDER') {
-    event.waitUntil(cancelReminder())
+    event.waitUntil(
+      (async () => {
+        await cancelReminder()
+        await saveReminderPrefs(null)
+      })(),
+    )
   }
 })
 
@@ -148,18 +216,28 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     (async () => {
-      const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const allClients = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })
       for (const client of allClients) {
         if ('focus' in client) {
           await client.focus()
-          return
+          break
         }
       }
-      await self.clients.openWindow('/')
+      if (allClients.length === 0) {
+        await self.clients.openWindow('/')
+      }
 
       if (typeof data?.hour === 'number' && typeof data?.minute === 'number') {
         const timestamp = nextTimestamp(data.hour, data.minute)
         await scheduleReminder({ hour: data.hour, minute: data.minute, timestamp })
+        await saveReminderPrefs({
+          enabled: true,
+          hour: data.hour,
+          minute: data.minute,
+        })
       }
     })(),
   )
@@ -169,7 +247,16 @@ self.addEventListener('notificationclose', (event) => {
   const data = event.notification.data as { hour?: number; minute?: number } | undefined
   if (typeof data?.hour !== 'number' || typeof data?.minute !== 'number') return
   const timestamp = nextTimestamp(data.hour, data.minute)
-  event.waitUntil(scheduleReminder({ hour: data.hour, minute: data.minute, timestamp }))
+  event.waitUntil(
+    (async () => {
+      await scheduleReminder({ hour: data.hour!, minute: data.minute!, timestamp })
+      await saveReminderPrefs({
+        enabled: true,
+        hour: data.hour!,
+        minute: data.minute!,
+      })
+    })(),
+  )
 })
 
 export {}

@@ -77,6 +77,14 @@ This file lists the prompts and intent sequence used while building the challeng
 
 ---
 
+## Prompt 9 — UI / Three.js / fonts / notifications polish
+
+> Asked for stronger Three.js, unique theme, clearer fonts, footer fix, remove test-notification button, then push + Vercel deploy.
+
+**Agent actions:** Glass weather-orb Three.js scene; Harbor Observatory theme (Sora + IBM Plex Sans); sticky footer; reminder flow kept without test button; commit, push, production deploy.
+
+---
+
 ## Prompt strategy (what we optimized for)
 
 1. **Spec-first** — mapped each numbered requirement (01–07) to a concrete module before styling.
